@@ -22,12 +22,12 @@ def set_character_file(file):
 def get_character_json():
     return character_file_json
 
-def get_sim_character_json(file) -> dict:
+def get_sim_character_json(file: str, character_type: str = "player") -> dict:
     sim_character_file_json = {}
     print(f"loaded characters/{file}")
     with open(f"characters/{file}", "r") as character_file:
         sim_character_file_json = json.load(character_file)
-        validate_character_json(character_file_json)
+        validate_character_json(sim_character_file_json, character_type=character_type)
     return sim_character_file_json
 
 def get_instructions():
@@ -55,11 +55,19 @@ def get_thoughts():
     {character_file_json["post_autonomous_thought"]}
     """ 
 
-def validate_character_json(character_json):
-    required_fields = [
-        "Name", "Identity", "Functionality", "Communications", "Friends",
-        "Interests", "Platform"
-    ]
+def validate_character_json(character_json, character_type: str = "player"):
+    required_fields = list()
+    if character_type == "gm":
+        required_fields = [
+            "Name", "Identity", "Functionality", "Communications", "ScenarioBuildingRules",
+            "ConflictResolutionRules", "NarrativeFocus", "Platform", "Extra"
+        ]
+    else:
+        required_fields = [
+            "Name", "Identity", "Functionality", "Communications", "Friends",
+            "Interests", "Platform"
+        ]
+
     for field in required_fields:
         if field not in character_json:
             raise ValueError(f"Missing required field: {field}")
@@ -78,7 +86,7 @@ def dao_simulation_setup(world_context_json: str) -> tuple:
         initial_context = json.load(world_context_file)
 
     players = [get_sim_character_json(file) for file in initial_context["Initial"]["players"]]
-    gm = get_sim_character_json(initial_context["Initial"]["gm"])
+    gm = get_sim_character_json(initial_context["Initial"]["gm"], character_type="gm")
     
     return initial_context, players, gm
 
